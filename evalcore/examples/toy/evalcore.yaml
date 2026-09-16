@@ -1,0 +1,15 @@
+project: toy
+adapter:
+  type: python
+  callable: examples.toy.target:answer
+dataset: examples/toy/golden.jsonl
+metrics:
+  - name: retrieval_recall_at_k
+    params: {k: 3}
+  - name: exact_label_match
+    params: {label: category}
+  - name: latency_budget
+    params: {max_ms: 1000}
+run:
+  concurrency: 4
+  seed: 42
