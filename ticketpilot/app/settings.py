@@ -15,16 +15,18 @@ class Settings(BaseSettings):
 
     # Retrieval / pipeline knobs.
     active_strategy: str = "fixed_512_50"
-    active_embed_model: str = "text-embedding-3-small"
+    active_embed_model: str = "gemini-embedding-2"
     top_k: int = 5
     conf_threshold: float = 0.6
     rrf_threshold: float = 0.01  # min fused RRF score before retrieval is deemed too weak (§3.2)
-    llm_model: str = "claude-sonnet-4-6"
+    llm_model: str = "gemini-3.5-flash-lite"
 
     # Secrets (names only; values live in .env or the platform secret store).
     openai_api_key: str | None = None
+    gemini_api_key: str | None = None
     anthropic_api_key: str | None = None
     github_token: str | None = None
+    api_token: str | None = None
     eval_token: str | None = None
 
 

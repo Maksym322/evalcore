@@ -20,6 +20,7 @@ class JudgeConfig(BaseModel):
 
     model_config = ConfigDict(extra="forbid")
 
+    provider: Literal["anthropic", "openai", "gemini"]
     model: str
     prompt: str = "default"
 

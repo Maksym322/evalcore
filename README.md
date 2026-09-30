@@ -4,6 +4,13 @@
 
 EvalCore is a project-agnostic, regression-gated evaluation framework for LLM systems (pip-installable package). It is shipped alongside **TicketPilot** — a 4-stage RAG support-ticket resolution engine — as its first reference consumer.
 
+**Current state (2026-09-30):** EvalCore passes offline tests and can run deterministic
+or configured judge metrics. TicketPilot has a local Compose setup and offline-tested
+provider adapters, ingestion, and API routes. The Docker stack, live Gemini calls,
+Postgres integration, verified golden dataset, CI gate, and public deployment have
+not yet been validated. See [TicketPilot setup](ticketpilot/README.md) and
+[project state](MEMORY.md) before presenting this as a live demo.
+
 ---
 
 ## 📐 Architecture Overview
@@ -17,7 +24,7 @@ project1/
 ### 1. EvalCore Framework (`/evalcore`)
 - **Deterministic & Judged Metrics**: Retrieval recall/precision, exact label match, JSON schema validation, latency budget, LLM-as-a-judge (faithfulness & relevance).
 - **Adapters**: Flexible target protocols supporting Python callables, HTTP endpoints, and webhooks (n8n).
-- **CI Regression Gating**: Automated baseline comparison (`max_drop_pct`, `min_value`) returning non-zero exit codes on quality degradation.
+- **Regression Gate CLI**: Baseline comparison (`max_drop_pct`, `min_value`) returns non-zero exit codes on quality degradation; GitHub CI wiring is still pending.
 - **Production Resilience**: Bounded async concurrency, journal + resume, content-hash disk caching for judge calls.
 
 ### 2. TicketPilot Engine (`/ticketpilot`)
@@ -40,7 +47,7 @@ pytest
 mypy --strict evalcore
 
 # Run example evaluation
-evalcore run examples/toy/evalcore.yaml
+python -m evalcore.cli run --config examples/toy/evalcore.yaml --out-dir runs/toy
 ```
 
 ### Running TicketPilot Locally
@@ -49,8 +56,8 @@ evalcore run examples/toy/evalcore.yaml
 cd ticketpilot
 pip install -e .[dev]
 
-# Start Postgres + pgvector
-docker compose up -d
+# Start Postgres, apply migration, and start API (requires local .env)
+docker compose up -d --build
 
 # Run API & Pipeline tests
 pytest

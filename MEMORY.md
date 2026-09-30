@@ -2,6 +2,15 @@
 
 > The agent updates this file at the end of every working session. Keep entries short and factual.
 
+## 2026-09-30 deployment preparation (current state)
+
+- The folders `evalcore/` and `ticketpilot/` are in **one Git repository** (`project1`), despite older notes below describing separate repositories. Work is in isolated branch `prep-ticketpilot-deploy` under `voice-fleet-dev/artifacts/project1-deploy-work`; original checkout was clean and left untouched.
+- Added a Gemini structured-output client (one repair retry), Gemini query/document embeddings at 1536 dimensions, Postgres vector/full-text retrieval, fixed 512/50-character Markdown ingestion, and API bearer auth. Model defaults are `gemini-3.5-flash-lite` and `gemini-embedding-2`; no schema migration was needed because embedding dimension remains 1536.
+- Compose now runs migration before API, keeps Postgres internal, and binds API to loopback. README and `.env.example` describe local setup. 34 TicketPilot offline tests pass, Ruff and mypy pass; runtime-only package import also passes. **No real provider call or live DB/Compose end-to-end test yet.** Docker Desktop Linux engine was unavailable during this session.
+- EvalCore runner now wires configured judge metrics, records judge versions, and can use the Gemini judge; 140 offline EvalCore tests pass. `judge.provider` is now required in configs that use judged metrics (config contract change, no DB migration). A two-question TicketPilot smoke config exists, but has not been run against live API and is not a validated golden dataset.
+- Still open in M3: GitHub issues loader, heading-aware chunking, retrieval/DB integration tests, metrics/rate limiting/tracing. M4 verified golden dataset/baseline and M5 CI/public deployment are not done.
+- Need user choice of deployment host, fresh local `GEMINI_API_KEY`, and API/Eval tokens before live demo. Do not paste credentials in chat. Old exposed Gemini/Supabase keys mentioned below must be rotated before reuse.
+
 ## 🏗️ Active Phase & Goal
 
 **Phase:** M3 — TicketPilot (RAG ticket-answering service; EvalCore's first real consumer)

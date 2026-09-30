@@ -31,3 +31,8 @@ def returns_int(input: dict[str, Any]) -> int:
 def retrieval(input: dict[str, Any]) -> dict[str, Any]:
     # Category + retrieved ids come from item input. Missing "docs" -> None (a NaN failure).
     return {"answer": input.get("cat", ""), "retrieved_ids": input.get("docs")}
+
+
+def grounded(input: dict[str, Any]) -> dict[str, Any]:
+    answer = str(input.get("answer", ""))
+    return {"answer": answer, "retrieved_context": [answer]}

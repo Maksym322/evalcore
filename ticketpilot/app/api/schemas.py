@@ -2,14 +2,14 @@
 
 from typing import Any
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from app.pipeline.models import PipelineResult
 
 
 class TicketCreate(BaseModel):
     title: str | None = None
-    body: str
+    body: str = Field(min_length=1, max_length=10_000)
 
 
 class AnswerOut(BaseModel):

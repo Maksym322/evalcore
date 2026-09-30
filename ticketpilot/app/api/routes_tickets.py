@@ -12,6 +12,7 @@ from app.api.deps import (
     get_llm,
     get_repository,
     get_store,
+    require_api_token,
     require_eval_token,
 )
 from app.api.schemas import EvalOut, EvalRequest, TicketCreate, TicketOut
@@ -32,7 +33,7 @@ Store = Annotated[RetrievalStore, Depends(get_store)]
 Config = Annotated[Settings, Depends(get_settings)]
 
 
-@router.post("", response_model=TicketOut)
+@router.post("", response_model=TicketOut, dependencies=[Depends(require_api_token)])
 async def create_ticket(
     payload: TicketCreate, repo: Repo, llm: Llm, embedder: Embed, store: Store, settings: Config
 ) -> TicketOut:
@@ -50,8 +51,11 @@ async def create_ticket(
 async def eval_ticket(
     payload: EvalRequest, llm: Llm, embedder: Embed, store: Store, settings: Config
 ) -> EvalOut:
+    body = payload.ticket_body()
+    if not body or len(body) > 10_000:
+        raise HTTPException(422, "ticket body must be 1 to 10000 characters")
     result = await answer_ticket(
-        payload.ticket_body(),
+        body,
         llm=llm,
         embedder=embedder,
         store=store,
@@ -61,7 +65,7 @@ async def eval_ticket(
     return EvalOut.from_result(result)
 
 
-@router.get("/{ticket_id}", response_model=TicketOut)
+@router.get("/{ticket_id}", response_model=TicketOut, dependencies=[Depends(require_api_token)])
 async def get_ticket(ticket_id: str, repo: Repo) -> TicketOut:
     ticket = await repo.get(ticket_id)
     if ticket is None:
@@ -69,7 +73,9 @@ async def get_ticket(ticket_id: str, repo: Repo) -> TicketOut:
     return ticket
 
 
-@router.post("/{ticket_id}/resolve", response_model=TicketOut)
+@router.post(
+    "/{ticket_id}/resolve", response_model=TicketOut, dependencies=[Depends(require_api_token)]
+)
 async def resolve_ticket(ticket_id: str, repo: Repo) -> TicketOut:
     ticket = await repo.set_status(ticket_id, "resolved")
     if ticket is None:

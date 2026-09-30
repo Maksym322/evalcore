@@ -7,6 +7,8 @@ from pathlib import Path
 import pytest
 
 from evalcore.config import (
+    ConfigError,
+    JudgeConfig,
     MetricConfig,
     PythonAdapterConfig,
     RunConfig,
@@ -21,6 +23,7 @@ from evalcore.runner import (
     run_eval,
 )
 from evalcore.schema import DatasetItem, Reference
+from tests._fake_judge import FakeJudge
 
 FAKE = "tests._fake_target:retrieval"
 
@@ -202,3 +205,43 @@ def test_journal_nan_round_trips(tmp_path: Path) -> None:
     _append_journal(journal, item, [MetricResult(metric="m", item_id="i1", score=math.nan)])
     _done, results = _read_journal(journal)
     assert math.isnan(results[0].score)
+
+
+async def test_run_eval_wires_judged_metric_and_pins_version(tmp_path: Path) -> None:
+    dataset = _write_jsonl(
+        tmp_path,
+        ['{"id":"i1","input":{"answer":"Reset password"},"reference":{}}'],
+    )
+    config = RunConfig(
+        project="judged",
+        adapter=PythonAdapterConfig(type="python", callable="tests._fake_target:grounded"),
+        dataset=str(dataset),
+        metrics=[
+            MetricConfig(
+                name="faithfulness",
+                judge=JudgeConfig(provider="gemini", model="gemini-3.5-flash-lite", prompt="v1"),
+            )
+        ],
+    )
+    report = await run_eval(
+        config,
+        runs_dir=tmp_path / "runs",
+        judge_factory=lambda _pin, _cache: FakeJudge("fake/fake@v1"),
+    )
+    assert report.judge_versions == {"faithfulness": "fake/fake@v1"}
+    assert report.aggregates["faithfulness"].mean == 1.0
+
+
+async def test_judged_metric_requires_pin(tmp_path: Path) -> None:
+    dataset = _write_jsonl(
+        tmp_path,
+        ['{"id":"i1","input":{"answer":"x"},"reference":{}}'],
+    )
+    config = RunConfig(
+        project="judged",
+        adapter=PythonAdapterConfig(type="python", callable="tests._fake_target:grounded"),
+        dataset=str(dataset),
+        metrics=[MetricConfig(name="faithfulness")],
+    )
+    with pytest.raises(ConfigError, match="requires a judge"):
+        await run_eval(config, runs_dir=tmp_path / "runs")

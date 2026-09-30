@@ -15,4 +15,4 @@ migrate:
 	alembic upgrade head
 
 ingest:
-	@echo "ingestion arrives in M3.3"
+	python -m app.ingestion.cli $(SOURCE)

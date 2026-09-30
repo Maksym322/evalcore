@@ -1,8 +1,4 @@
-"""LLM interface for structured (JSON) generation (TechDesign §3.2).
-
-Stages depend on this protocol, not a concrete client. The real httpx-based client (with the
-one repair retry and provider selection) is a separate sub-task; tests inject a FakeLLM.
-"""
+"""LLM interface for structured (JSON) generation (TechDesign §3.2)."""
 
 from typing import Protocol, TypeVar
 

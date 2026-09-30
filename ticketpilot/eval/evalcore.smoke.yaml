@@ -1,0 +1,19 @@
+project: ticketpilot
+adapter:
+  type: http
+  url: ${TICKETPILOT_EVAL_URL}
+  auth_header_env: EVAL_TOKEN
+  map:
+    answer: $.answer
+    retrieved_context: $.retrieved_context[*]
+    retrieved_ids: $.retrieved_ids[*]
+dataset: eval/smoke.jsonl
+metrics:
+  - name: answer_relevance
+    judge: {provider: gemini, model: gemini-3.5-flash-lite, prompt: v1}
+  - name: faithfulness
+    judge: {provider: gemini, model: gemini-3.5-flash-lite, prompt: v1}
+  - name: latency_budget
+    params: {max_ms: 5000}
+run:
+  concurrency: 2

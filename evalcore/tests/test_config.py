@@ -16,7 +16,7 @@ metrics:
   - name: retrieval_recall_at_k
     params: {k: 5}
   - name: faithfulness
-    judge: {model: claude-sonnet-4-6, prompt: default}
+    judge: {provider: anthropic, model: claude-sonnet-4-6, prompt: default}
 gate:
   baseline: eval/baselines/main.json
   rules:

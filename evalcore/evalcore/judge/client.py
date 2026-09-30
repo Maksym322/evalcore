@@ -25,7 +25,11 @@ from evalcore.judge.cache import JudgeCache, cache_key, context_digest
 
 _RETRY_STATUS = {429, 500, 502, 503, 504}
 _MAX_OUTPUT_TOKENS = 512
-_ENV_KEY = {"anthropic": "ANTHROPIC_API_KEY", "openai": "OPENAI_API_KEY"}
+_ENV_KEY = {
+    "anthropic": "ANTHROPIC_API_KEY",
+    "openai": "OPENAI_API_KEY",
+    "gemini": "GEMINI_API_KEY",
+}
 _REPAIR = (
     '\n\nReturn ONLY a JSON object {"score": <number 0..1>, "reason": <string>}. '
     "No prose, no code fences."
@@ -81,7 +85,7 @@ class JudgeClient:
 
     async def evaluate(self, request: JudgeRequest) -> JudgeResult:
         key = cache_key(
-            model=self._model,
+            model=f"{self._provider}/{self._model}",
             prompt_version=self._prompt_version,
             item_id=request.item_id,
             answer=request.answer,
@@ -115,10 +119,20 @@ class JudgeClient:
                 "temperature": 0,
                 "messages": [message],
             }
-        else:  # openai
+        elif self._provider == "openai":
             url = "https://api.openai.com/v1/chat/completions"
             headers = {"authorization": f"Bearer {self._api_key}"}
             payload = {"model": self._model, "temperature": 0, "messages": [message]}
+        else:  # gemini
+            url = (
+                "https://generativelanguage.googleapis.com/v1beta/models/"
+                f"{self._model}:generateContent"
+            )
+            headers = {"x-goog-api-key": self._api_key}
+            payload = {
+                "contents": [{"role": "user", "parts": [{"text": prompt}]}],
+                "generationConfig": {"responseFormat": {"text": {"mimeType": "application/json"}}},
+            }
         return url, headers, payload
 
     def _extract(self, data: Any) -> str:
@@ -126,8 +140,10 @@ class JudgeClient:
         try:
             if self._provider == "anthropic":
                 value = data["content"][0]["text"]
-            else:
+            elif self._provider == "openai":
                 value = data["choices"][0]["message"]["content"]
+            else:
+                value = data["candidates"][0]["content"]["parts"][0]["text"]
         except (KeyError, IndexError, TypeError) as e:
             raise JudgeError(f"unexpected judge response shape: {e}") from e
         if not isinstance(value, str):

@@ -75,12 +75,15 @@ def _make_app(repo: "FakeRepo", *, eval_token: str | None = None):  # type: igno
     app.dependency_overrides[get_llm] = _fake_llm
     app.dependency_overrides[get_embedder] = lambda: FakeEmbedder()
     app.dependency_overrides[get_store] = _fake_store
-    app.dependency_overrides[get_settings] = lambda: Settings(_env_file=None, eval_token=eval_token)  # type: ignore[call-arg]
+    app.dependency_overrides[get_settings] = lambda: Settings(  # type: ignore[call-arg]
+        _env_file=None, api_token="api-secret", eval_token=eval_token
+    )
     return app
 
 
-def _client(app):  # type: ignore[no-untyped-def]
-    return AsyncClient(transport=ASGITransport(app=app), base_url="http://test")
+def _client(app, *, api_auth: bool = True):  # type: ignore[no-untyped-def]
+    headers = {"Authorization": "Bearer api-secret"} if api_auth else {}
+    return AsyncClient(transport=ASGITransport(app=app), base_url="http://test", headers=headers)
 
 
 @pytest.fixture
@@ -117,7 +120,7 @@ async def test_resolve_ticket(repo: FakeRepo) -> None:
 
 
 async def test_eval_requires_bearer_token(repo: FakeRepo) -> None:
-    async with _client(_make_app(repo, eval_token="secret")) as client:
+    async with _client(_make_app(repo, eval_token="secret"), api_auth=False) as client:
         no_auth = await client.post("/tickets/eval", json={"id": "i1", "input": {"body": "q"}})
         bad = await client.post(
             "/tickets/eval",
@@ -129,7 +132,7 @@ async def test_eval_requires_bearer_token(repo: FakeRepo) -> None:
 
 
 async def test_eval_returns_adapter_shape(repo: FakeRepo) -> None:
-    async with _client(_make_app(repo, eval_token="secret")) as client:
+    async with _client(_make_app(repo, eval_token="secret"), api_auth=False) as client:
         resp = await client.post(
             "/tickets/eval",
             json={"id": "i1", "input": {"body": "How do I pay?"}},
@@ -141,3 +144,27 @@ async def test_eval_returns_adapter_shape(repo: FakeRepo) -> None:
     assert data["retrieved_ids"] == ["d1"]
     assert data["metadata"]["category"] == "billing"
     assert isinstance(data["metadata"]["latency_ms"], int)
+
+
+async def test_ticket_routes_require_api_token(repo: FakeRepo) -> None:
+    async with _client(_make_app(repo), api_auth=False) as client:
+        create = await client.post("/tickets", json={"body": "q"})
+        read = await client.get("/tickets/missing")
+    assert create.status_code == 401
+    assert read.status_code == 401
+
+
+async def test_empty_ticket_rejected_before_pipeline(repo: FakeRepo) -> None:
+    async with _client(_make_app(repo)) as client:
+        response = await client.post("/tickets", json={"body": ""})
+    assert response.status_code == 422
+
+
+async def test_empty_eval_rejected_before_pipeline(repo: FakeRepo) -> None:
+    async with _client(_make_app(repo, eval_token="secret"), api_auth=False) as client:
+        response = await client.post(
+            "/tickets/eval",
+            json={"id": "i1", "input": {}},
+            headers={"Authorization": "Bearer secret"},
+        )
+    assert response.status_code == 422

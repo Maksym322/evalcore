@@ -1,8 +1,4 @@
-"""Embedder interface (TechDesign §3.2). The concrete provider impl is a later sub-task.
-
-Defined here (ingestion owns embedding) but consumed by the retrieve stage too. Tests inject
-a FakeEmbedder so the pipeline stays offline.
-"""
+"""Embedder interface (TechDesign §3.2)."""
 
 from typing import Protocol
 

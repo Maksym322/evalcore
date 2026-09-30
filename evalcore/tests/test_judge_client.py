@@ -172,3 +172,21 @@ def test_version_string(tmp_path) -> None:  # type: ignore[no-untyped-def]
 def test_unknown_provider_rejected(tmp_path) -> None:  # type: ignore[no-untyped-def]
     with pytest.raises(ValueError):
         JudgeClient(provider="grok", model="m", prompt_version="v1", cache=JudgeCache(tmp_path))
+
+
+async def test_gemini_request_shape(tmp_path) -> None:  # type: ignore[no-untyped-def]
+    requests: list[httpx.Request] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        requests.append(request)
+        return httpx.Response(
+            200,
+            json={
+                "candidates": [{"content": {"parts": [{"text": '{"score": 0.8, "reason": "ok"}'}]}}]
+            },
+        )
+
+    client = _client(httpx.MockTransport(handler), JudgeCache(tmp_path), provider="gemini")
+    await client.evaluate(JudgeRequest(item_id="x", prompt="grade", answer="a", context="c"))
+    assert requests[0].headers["x-goog-api-key"] == "test-key"
+    assert requests[0].url.path.endswith("/m:generateContent")

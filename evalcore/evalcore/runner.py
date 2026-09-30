@@ -15,6 +15,7 @@ import os
 import statistics
 import time
 from collections import defaultdict
+from collections.abc import Callable
 from datetime import UTC, datetime
 from pathlib import Path
 
@@ -22,7 +23,10 @@ import anyio
 from pydantic import ValidationError
 
 from evalcore.adapters.factory import build_adapter
-from evalcore.config import RunConfig, SmokeSubset
+from evalcore.config import ConfigError, JudgeConfig, RunConfig, SmokeSubset
+from evalcore.judge.base import Judge
+from evalcore.judge.cache import JudgeCache
+from evalcore.judge.client import JudgeClient
 from evalcore.metrics.base import build, check_preconditions, dataset_reference_fields
 from evalcore.schema import Aggregate, DatasetItem, MetricResult, RunReport
 
@@ -140,10 +144,33 @@ async def run_eval(
     *,
     runs_dir: str | Path = "runs",
     resume: str | None = None,
+    judge_factory: Callable[[JudgeConfig, JudgeCache], Judge] | None = None,
 ) -> RunReport:
     """Execute an eval run and return a RunReport. Writes an append-only journal under runs_dir."""
     adapter = build_adapter(config.adapter)
-    metrics = [build(m.name, m.params) for m in config.metrics]
+    cache = JudgeCache(Path(runs_dir) / "judge_cache")
+    judge_versions: dict[str, str] = {}
+    metrics = []
+    for metric_config in config.metrics:
+        if metric_config.judge is None:
+            metric = build(metric_config.name, metric_config.params)
+        else:
+            pin = metric_config.judge
+            judge = (
+                judge_factory(pin, cache)
+                if judge_factory is not None
+                else JudgeClient(
+                    provider=pin.provider,
+                    model=pin.model,
+                    prompt_version=pin.prompt,
+                    cache=cache,
+                )
+            )
+            metric = build(metric_config.name, metric_config.params, judge=judge)
+            if metric.kind != "judged":
+                raise ConfigError(f"Metric {metric.name!r} does not accept a judge")
+            judge_versions[metric.name] = judge.version
+        metrics.append(metric)
 
     items = _apply_subset(load_dataset(config.dataset), config.run.smoke_subset)
     check_preconditions(metrics, _available_fields(items))
@@ -179,7 +206,7 @@ async def run_eval(
         run_id=run_id,
         started_at=started_at,
         config_hash=_config_hash(config),
-        judge_versions={},
+        judge_versions=judge_versions,
         items=len(items),
         aggregates=_aggregate(results),
         per_item=results,
