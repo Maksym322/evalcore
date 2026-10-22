@@ -1,3 +1,10 @@
+## 2026-10-22 orchestrator integration planning (current)
+
+- Planning only: see docs/orchestrator-integration.md for product boundaries, CI, behavioral test authoring and offline retrieval evaluation.
+- Canonical EvalCore project registered in local operator database; TicketPilot remains its reference component. EC-001 is draft; ORC-014/015/016 are blocked backlog requests with API readback, no execution dispatched.
+- Local source inspected at 40115f0; remote main observed at 2ec635e. Neither inspected commit has tracked GitHub workflows. Git transport works; Actions API access/settings/billing were not inspected.
+- No application code, dependency, provider or database schema change. No fresh application test suite run in this planning session. M3/M4 completion is not asserted.
+- Older phase and two-repository notes below are historical; use the newer dated entries plus actual source.
 # MEMORY.md — Artifact-First Memory
 
 > The agent updates this file at the end of every working session. Keep entries short and factual.
