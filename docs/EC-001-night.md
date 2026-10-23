@@ -17,3 +17,7 @@ Coordinator baseline on source88e4402: existing Python3.14 environments passed14
 Verified full action commits available: checkout d23441a48e516b6c34aea4fa41551a30e30af803; setup-python ece7cb06caefa5fff74198d8649806c4678c61a1; upload-artifact v6 b7c566a772e6b6bfb58ed0dc250532a479d7789f (official git tag checked). Keep artifact paths under reports/ and retention <=7days.
 
 Included gemini-3.8-flash-medium only; one attempt and no recursive delegation. Do not commit/push/create PR/merge/deploy; coordinator commits and records local evidence. Remote CI verification and billing allowance are later coordinator steps, not passing offline evidence. No real environment files, judge calls, database services or baseline promotion.
+
+## Fresh Python3.12 night baseline
+
+140EvalCore and34TicketPilot tests passed; both Ruff check/format passed; TicketPilot strict mypy passed. EvalCore strict mypy currently fails2errors at evalcore/adapters/http_adapter.py:16: obsolete import-untyped ignore and jsonpath_ng.parse not explicitly exported (attr-defined). Resolve accurately without global ignore_errors or weakened mypy. Toolchain: Python3.12,pytest9.1.1,Ruff0.17.2,mypy2.4.0; dependencies installed from declared dev extras. Preserve source behavior and negative tests.
