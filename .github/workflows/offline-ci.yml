@@ -52,7 +52,17 @@ jobs:
           mkdir -p ../reports/evalcore
           python -m evalcore.cli run --config examples/toy/evalcore.yaml --out-dir ../reports/evalcore
 
+      - name: Generate EvalCore provenance manifest
+        if: always()
+        env:
+          PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          python scripts/ci_provenance.py --component evalcore --out-dir reports/evalcore
+
       - name: Upload EvalCore reports
+        if: always()
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f
         with:
           name: evalcore-reports
@@ -96,7 +106,17 @@ jobs:
         working-directory: ticketpilot
         run: mypy --no-incremental app
 
+      - name: Generate TicketPilot provenance manifest
+        if: always()
+        env:
+          PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          python scripts/ci_provenance.py --component ticketpilot --out-dir reports/ticketpilot
+
       - name: Upload TicketPilot reports
+        if: always()
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f
         with:
           name: ticketpilot-reports

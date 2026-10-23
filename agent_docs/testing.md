@@ -18,6 +18,7 @@
 - Config loading: unknown metric name fails with available list; metric precondition check aborts before any adapter call
 - Gate rule table: max_drop_pct and min_value combinations → correct exit codes; config-hash mismatch → warn / `--strict` fail
 - Regression gate CI suite (`tests/test_ci_gate.py`): synthetic gate pass (exit 0), deliberate regression fail (exit 1), missing gate/baseline error handling (exit 2)
+- CI provenance suite (`tests/test_ci_provenance.py`): synthetic PR merge/head/base identities, main push, missing/malformed metadata, and mismatched tested-head validation
 - Judge cache: hit/miss by content hash; cache invalidates when model or prompt_version changes
 - Runner: journal written per item; `--resume` skips completed; failures counted, never averaged as zeros
 
