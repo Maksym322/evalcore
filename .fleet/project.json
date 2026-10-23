@@ -99,6 +99,14 @@
         "import os,sys,runpy; os.chdir('evalcore'); sys.path.insert(0,os.getcwd()); sys.argv=['pytest','tests/test_ci_provenance.py','-q','-p','no:cacheprovider']; runpy.run_module('pytest',run_name='__main__')"
       ],
       "timeout_seconds": 180
+    },
+    {
+      "name": "ci-environment",
+      "argv": [
+        "{python}",
+        "scripts/recovery_ci_environment_check.py"
+      ],
+      "timeout_seconds": 180
     }
   ],
   "secret_names": []
