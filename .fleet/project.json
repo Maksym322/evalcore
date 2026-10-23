@@ -1,0 +1,95 @@
+{
+  "schema_version": 1,
+  "project_id": "evalcore",
+  "context_files": [
+    "AGENTS.md",
+    "MEMORY.md",
+    "docs/orchestrator-integration.md",
+    "docs/EC-001-night.md",
+    "evalcore/pyproject.toml",
+    "ticketpilot/pyproject.toml"
+  ],
+  "checks": [
+    {
+      "name": "eval-unit",
+      "argv": [
+        "{python}",
+        "scripts/ec001_checks.py",
+        "evalcore",
+        "unit"
+      ],
+      "timeout_seconds": 180
+    },
+    {
+      "name": "eval-lint",
+      "argv": [
+        "{python}",
+        "scripts/ec001_checks.py",
+        "evalcore",
+        "lint"
+      ],
+      "timeout_seconds": 120
+    },
+    {
+      "name": "eval-types",
+      "argv": [
+        "{python}",
+        "scripts/ec001_checks.py",
+        "evalcore",
+        "types"
+      ],
+      "timeout_seconds": 180
+    },
+    {
+      "name": "ticket-unit",
+      "argv": [
+        "{python}",
+        "scripts/ec001_checks.py",
+        "ticketpilot",
+        "unit"
+      ],
+      "timeout_seconds": 180
+    },
+    {
+      "name": "ticket-lint",
+      "argv": [
+        "{python}",
+        "scripts/ec001_checks.py",
+        "ticketpilot",
+        "lint"
+      ],
+      "timeout_seconds": 120
+    },
+    {
+      "name": "ticket-types",
+      "argv": [
+        "{python}",
+        "scripts/ec001_checks.py",
+        "ticketpilot",
+        "types"
+      ],
+      "timeout_seconds": 180
+    },
+    {
+      "name": "offline-gates",
+      "argv": [
+        "{python}",
+        "scripts/ec001_checks.py",
+        "evalcore",
+        "gates"
+      ],
+      "timeout_seconds": 180
+    },
+    {
+      "name": "workflow",
+      "argv": [
+        "{python}",
+        "scripts/ec001_checks.py",
+        "evalcore",
+        "workflow"
+      ],
+      "timeout_seconds": 60
+    }
+  ],
+  "secret_names": []
+}

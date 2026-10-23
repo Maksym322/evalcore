@@ -1,0 +1,37 @@
+{
+  "schema_version": 1,
+  "id": "EC-001",
+  "title": "Offline CI foundation",
+  "outcome": "Add bounded offline PR/main CI and genuine deterministic regression gates for EvalCore and TicketPilot.",
+  "acceptance": [
+    "Implement the offline EC-001 CI foundation for the existing EvalCore and TicketPilot monorepo only. Use component pyprojects/Makefiles, document supported Python versions and actual tested versions, and retain existing API/schema behavior. Owner explicitly approved this planned CI task; do not expand unfinished TicketPilot features or deployment.",
+    "Add .github/workflows/offline-ci.yml on pull_request and push to main, with read-only contents permission, bounded job timeouts and short-lived artifacts under reports/. Pin every external action to a verified full commit. No pull_request_target, provider credentials, paid services or automatic baseline promotion.",
+    "Run pytest, Ruff check/format and strict mypy from each correct component directory. Establish current baseline before code changes; fix only CI compatibility issues needed for these declared checks, preserving existing assertions and behavior.",
+    "Add evalcore/tests/test_ci_gate.py with real executed synthetic gate pass and deliberate regression fail cases and exact expected exit codes. Use a genuine gate config; the toy config has no gate section. Keep datasets/baselines reviewed in source; never silently update expected answers. Run toy deterministic CLI evaluation with a real bounded JSON report and no provider keys.",
+    "Update MEMORY.md and CI documentation with actual local results, fixture commands, report/tested-SHA provenance and limitations. The coordinator will later review/push/create PR after allowance checks; remote PR artifacts and a future main-push run remain pending, never claim that they ran overnight.",
+    "All declared local component tests/lint/types, offline gates and workflow-structure checks pass. No real Gemini/judge/Supabase/database call, no read of .env/OAuth keys, no commit/push/PR/main merge/deployment by provider."
+  ],
+  "scope": [
+    ".github",
+    "evalcore",
+    "ticketpilot",
+    "docs",
+    "MEMORY.md",
+    "agent_docs"
+  ],
+  "dependencies": [],
+  "base_sha": "88e4402baa8046e0a0fbbccb2eaff0cf1fcbe7e8",
+  "check_names": [
+    "eval-unit",
+    "eval-lint",
+    "eval-types",
+    "ticket-unit",
+    "ticket-lint",
+    "ticket-types",
+    "offline-gates",
+    "workflow"
+  ],
+  "max_attempts": 1,
+  "provider": "antigravity",
+  "model": "gemini-3.8-flash-medium"
+}
