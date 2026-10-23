@@ -7,7 +7,8 @@
     "docs/orchestrator-integration.md",
     "docs/EC-001-night.md",
     "evalcore/pyproject.toml",
-    "ticketpilot/pyproject.toml"
+    "ticketpilot/pyproject.toml",
+    "docs/ec-001-provenance-fix-assignment.md"
   ],
   "checks": [
     {
@@ -89,6 +90,15 @@
         "workflow"
       ],
       "timeout_seconds": 60
+    },
+    {
+      "name": "provenance",
+      "argv": [
+        "{python}",
+        "-c",
+        "import os,sys,runpy; os.chdir('evalcore'); sys.path.insert(0,os.getcwd()); sys.argv=['pytest','tests/test_ci_provenance.py','-q','-p','no:cacheprovider']; runpy.run_module('pytest',run_name='__main__')"
+      ],
+      "timeout_seconds": 180
     }
   ],
   "secret_names": []
