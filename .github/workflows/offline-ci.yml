@@ -1,0 +1,104 @@
+name: Offline CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  evalcore:
+    name: EvalCore (Python 3.12)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+
+      - name: Set up Python
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1
+        with:
+          python-version: "3.12"
+          cache: "pip"
+
+      - name: Install EvalCore dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e "./evalcore[dev]"
+
+      - name: Run EvalCore unit tests
+        working-directory: evalcore
+        run: pytest -q -p no:cacheprovider
+
+      - name: Lint EvalCore (Ruff)
+        working-directory: evalcore
+        run: |
+          ruff check --no-cache .
+          ruff format --check --no-cache .
+
+      - name: Type check EvalCore (Mypy strict)
+        working-directory: evalcore
+        run: mypy --no-incremental evalcore
+
+      - name: Execute EvalCore regression gate & toy eval
+        working-directory: evalcore
+        run: |
+          pytest tests/test_gate.py tests/test_cli.py tests/test_ci_gate.py -q -p no:cacheprovider
+          mkdir -p ../reports/evalcore
+          python -m evalcore.cli run --config examples/toy/evalcore.yaml --out-dir ../reports/evalcore
+
+      - name: Upload EvalCore reports
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f
+        with:
+          name: evalcore-reports
+          path: reports/evalcore
+          retention-days: 7
+
+  ticketpilot:
+    name: TicketPilot (Python 3.12)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+
+      - name: Set up Python
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1
+        with:
+          python-version: "3.12"
+          cache: "pip"
+
+      - name: Install TicketPilot dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e "./ticketpilot[dev]"
+
+      - name: Run TicketPilot unit tests
+        working-directory: ticketpilot
+        run: |
+          mkdir -p ../reports/ticketpilot
+          pytest -q -p no:cacheprovider --junitxml=../reports/ticketpilot/junit.xml
+
+      - name: Lint TicketPilot (Ruff)
+        working-directory: ticketpilot
+        run: |
+          ruff check --no-cache .
+          ruff format --check --no-cache .
+
+      - name: Type check TicketPilot (Mypy strict)
+        working-directory: ticketpilot
+        run: mypy --no-incremental app
+
+      - name: Upload TicketPilot reports
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f
+        with:
+          name: ticketpilot-reports
+          path: reports/ticketpilot
+          retention-days: 7

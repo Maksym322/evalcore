@@ -13,7 +13,7 @@ from typing import Any
 
 import anyio
 import httpx
-from jsonpath_ng import parse as jsonpath_parse  # type: ignore[import-untyped]
+from jsonpath_ng.parser import parse as jsonpath_parse
 
 from evalcore.adapters.base import AdapterError, Target
 from evalcore.config import ConfigError, HttpAdapterConfig, N8nWebhookAdapterConfig

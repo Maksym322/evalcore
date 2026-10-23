@@ -1,3 +1,21 @@
+## 2026-10-23 EC-001 offline CI foundation (completed)
+
+- **Outcome**: Implemented bounded offline PR/main CI and genuine deterministic regression gates for EvalCore and TicketPilot monorepo.
+- **Workflow**: Added `.github/workflows/offline-ci.yml` running on `pull_request` and `push` to `main`. Read-only `contents: read` permissions, 15-minute job timeouts, short-lived artifacts (`reports/`, retention <= 7 days), zero access to secrets, and all actions pinned to full 40-char commit SHAs (`actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803`, `actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1`, `actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f`).
+- **Compatibility Fix**: Fixed strict mypy error in `evalcore/evalcore/adapters/http_adapter.py` by importing directly from `jsonpath_ng.parser import parse as jsonpath_parse`, removing obsolete ignore and satisfying strict attr-defined checks with zero API/schema changes.
+- **Regression Gate Tests**: Added `evalcore/tests/test_ci_gate.py` executing genuine gate configs: synthetic pass (exit code 0), deliberate regression drop (exit code 1 with violations), missing gate/baseline error handling (exit code 2), strict hash mismatch failure, and deterministic toy evaluation generating real JSON reports.
+- **Documentation**: Documented supported (>=3.11) and actual tested Python versions (3.12 locally, 3.14 baseline) in `docs/ci.md` and updated `agent_docs/testing.md`.
+- **Local Verification Results** (Fleet Run ID: `9fcc8009-330f-4037-8863-b0084e6ca28f`, base SHA `88e4402baa8046e0a0fbbccb2eaff0cf1fcbe7e8`):
+  - `eval-unit`: 146 passed (0 failures)
+  - `eval-lint`: Ruff check + format clean (45 files)
+  - `eval-types`: Mypy strict clean (22 source files)
+  - `ticket-unit`: 34 passed (0 failures)
+  - `ticket-lint`: Ruff check + format clean (42 files)
+  - `ticket-types`: Mypy strict clean (30 source files)
+  - `offline-gates`: 22 passed gate/CLI tests + toy evaluation JSON report generated
+  - `workflow`: Bounded workflow structure, permissions, and pinned action SHAs verified
+- **Limitations**: Remote CI runs, remote GitHub Actions artifacts, and future main-push runs remain pending coordinator branch push, PR creation, and billing allowance checks. No remote runs occurred overnight; no provider credentials or live database calls used.
+
 ## 2026-10-22 orchestrator integration planning (current)
 
 - Planning only: see docs/orchestrator-integration.md for product boundaries, CI, behavioral test authoring and offline retrieval evaluation.
