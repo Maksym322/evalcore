@@ -50,6 +50,7 @@ def main():
         assert "main" in triggers["push"]["branches"]
         assert "pull_request_target" not in triggers
         assert data.get("permissions", {}).get("contents") == "read"
+        assert all(v in ("read", "none") for v in data["permissions"].values())
         assert "secrets." not in text and "secrets[" not in text
         artifacts = 0
         for job in data["jobs"].values():
